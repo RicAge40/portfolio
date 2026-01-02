@@ -1,87 +1,230 @@
-// HEADER
-document.getElementById("header").innerHTML = `
-<header class="header">
-  <nav class="menu">
-    <a href="index.html" class="nav-btn">HOME</a>
-    <a href="about.html" class="nav-btn">ABOUT</a>
-    <a href="projects.html" class="nav-btn">PROJECTS</a>
-    <a href="contact.html" class="nav-btn">CONTACT</a>
-  </nav>
-</header>
-`;
-const prefersReducedMotion = window.matchMedia(
-  "(prefers-reduced-motion: reduce)"
-).matches;
+const burger = document.querySelector(".burger");
+const nav = document.querySelector(".nav");
+const links = document.querySelectorAll(".nav a");
 
-if (prefersReducedMotion) {
-  // Aucune animation
-  gsap.set(".presentation section", { opacity: 1, y: 0 });
-  gsap.set(".subtitle span", { opacity: 1, y: 0 });
-  gsap.set(".developpeur h1", { opacity: 1, y: 0 });
-} else {
-  const subtitle = document.querySelector(".subtitle");
+burger.addEventListener("click", () => {
+  nav.classList.toggle("open");
+});
 
-  if (subtitle) {
-    const text = subtitle.textContent;
-    subtitle.textContent = "";
+links.forEach((link) => {
+  link.addEventListener("click", () => {
+    nav.classList.remove("open");
+  });
+});
 
-    text.split("").forEach((letter) => {
-      const span = document.createElement("span");
-      span.textContent = letter === " " ? "\u00A0" : letter;
-      subtitle.appendChild(span);
-    });
-  }
+// // ===============================
+// GSAP – HERO ANIMATIONS
+// ===============================
 
-  // animation du subtitle (lettres)
-  gsap.from(".subtitle span", {
+const mm = gsap.matchMedia();
+
+mm.add("(min-width: 1024px)", () => {
+  const title = document.querySelector(".hero-title");
+  const p = document.querySelector(".hero p");
+
+  // Split texte en spans
+  const text = title.textContent;
+  title.innerHTML = text
+    .split("")
+    .map((char) => (char === " " ? "&nbsp;" : `<span>${char}</span>`))
+    .join("");
+
+  const letters = title.querySelectorAll("span");
+
+  // États initiaux
+  gsap.set(title, { visibility: "visible" });
+  gsap.set(p, { visibility: "visible" });
+
+  gsap.set(letters, {
+    y: 80,
     opacity: 0,
-    y: 12,
-    duration: 0.6,
-    stagger: 0.03,
-    ease: "power2.out",
   });
 
-  // apparition du titre développeur
-  gsap.from(".developpeur h1", {
+  gsap.set(p, {
+    y: 20,
+    opacity: 0,
+  });
+
+  // Timeline
+  const tl = gsap.timeline({ delay: 0.3 });
+
+  tl.to(letters, {
+    y: 0,
+    opacity: 1,
+    duration: 1.1,
+    ease: "expo.out",
+    stagger: 0.14,
+  }).to(
+    p,
+    {
+      y: 0,
+      opacity: 1,
+      duration: 0.6,
+      ease: "power2.out",
+    },
+    "-=0.4"
+  );
+});
+
+mm.add("(max-width: 1023px)", () => {
+  const title = document.querySelector(".hero-title");
+  const p = document.querySelector(".hero p");
+
+  gsap.set([title, p], {
+    visibility: "visible",
     opacity: 0,
     y: 20,
-    duration: 0.8,
-    ease: "power2.out",
-    scrollTrigger: {
-      trigger: ".a-propos",
-      start: "top 85%",
-    },
   });
 
-  // apparition des colonnes (mobile-first)
-  gsap.fromTo(
-    ".presentation section",
-    { opacity: 0, y: 15 },
+  gsap.to(title, {
+    opacity: 1,
+    y: 0,
+    duration: 1,
+    ease: "power2.out",
+  });
+
+  gsap.to(p, {
+    opacity: 1,
+    y: 0,
+    duration: 0.5,
+    delay: 0.2,
+    ease: "power2.out",
+  });
+});
+
+// animation scroll dot
+document.addEventListener("DOMContentLoaded", () => {
+  const hero = document.querySelector(".hero");
+  const dot = document.querySelector(".scroll-dot");
+
+  if (!hero || !dot) return;
+
+  const observer = new IntersectionObserver(
+    ([entry]) => {
+      if (entry.isIntersecting) {
+        dot.style.animationPlayState = "running";
+      } else {
+        dot.style.animationPlayState = "paused";
+      }
+    },
     {
-      opacity: 1,
-      y: 0,
-      duration: 0.65,
-      ease: "power2.out",
-      stagger: 0.1,
-      scrollTrigger: {
-        trigger: ".presentation",
-        start: "top 90%",
-      },
+      threshold: 0.6, // % du hero visible
     }
   );
-}
-// /ligne sous le H1
-document.querySelector(".developpeur h1")?.classList.add("is-visible");
 
-// FOOTER (SANS follow-me)
-document.getElementById("footer").innerHTML = `
-<footer class="footer">
- <a href="https://github.com/RicAge40"
-   target="_blank"
-   class="follow-me">
-  <img src="assets/images/mdi--github.svg" alt="GitHub" class="git-icon">
+  observer.observe(hero);
+});
 
-  <span>Follow me</span>
-</a>
-</footer>
-`;
+// =====================
+// ABOUT – DESKTOP
+// =====================
+document.addEventListener("DOMContentLoaded", () => {
+  if (window.innerWidth < 1024) return;
+
+  const aboutSection = document.querySelector("#about");
+  const intro = document.querySelector(".about-intro");
+  const cards = document.querySelectorAll(".about-grid > div");
+
+  if (!aboutSection) return;
+
+  const tl = gsap.timeline({ paused: true });
+
+  tl.to(intro, {
+    opacity: 1,
+    y: 0,
+    duration: 0.8,
+    ease: "power3.out",
+  }).to(cards, {
+    opacity: 1,
+    y: 0,
+    duration: 0.7,
+    ease: "power3.out",
+    stagger: 0.2,
+  });
+
+  // 👇 état initial
+  gsap.set(cards, {
+    opacity: 0,
+    y: 40,
+    scale: 0.96,
+  });
+
+  // IntersectionObserver (scroll normal)
+  const observer = new IntersectionObserver(
+    ([entry]) => {
+      if (entry.isIntersecting) {
+        tl.play();
+        observer.disconnect();
+      }
+    },
+    { threshold: 0.3 }
+  );
+
+  observer.observe(aboutSection);
+
+  //  clic sur le menu
+  document.querySelectorAll('a[href="#about"]').forEach((link) => {
+    link.addEventListener("click", () => {
+      gsap.set([intro, cards], {
+        opacity: 0,
+        y: 40,
+      });
+      tl.restart();
+    });
+  });
+});
+
+// =====================
+// ABOUT – MOBILE
+// =====================
+document.addEventListener("DOMContentLoaded", () => {
+  if (window.innerWidth >= 1024) return;
+
+  const about = document.querySelector("#about");
+  const intro = document.querySelector(".about-intro");
+  const cards = document.querySelectorAll(".about-grid > div");
+
+  if (!about) return;
+
+  const playMobileAbout = () => {
+    gsap.to(intro, {
+      opacity: 1,
+      y: 0,
+      duration: 0.6,
+      ease: "power2.out",
+    });
+
+    gsap.to(cards, {
+      opacity: 1,
+      y: 0,
+      duration: 0.7,
+      ease: "power3.out",
+      stagger: 0.25,
+      delay: 0.15,
+    });
+  };
+
+  // Scroll normal
+  const observer = new IntersectionObserver(
+    ([entry]) => {
+      if (entry.isIntersecting) {
+        playMobileAbout();
+        observer.disconnect();
+      }
+    },
+    { threshold: 0.2 }
+  );
+
+  observer.observe(about);
+
+  // Clic menu
+  document.querySelectorAll('a[href="#about"]').forEach((link) => {
+    link.addEventListener("click", () => {
+      gsap.set([intro, cards], {
+        opacity: 0,
+        y: 30,
+      });
+      playMobileAbout();
+    });
+  });
+});
